@@ -83,4 +83,8 @@ class Kmeans:
     def centroid(self):
         return self.__centroid
 
+    @centroid.setter
+    def centroid(self, centroid):
+        self.__centroid = centroid
+
 

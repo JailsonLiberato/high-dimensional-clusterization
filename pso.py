@@ -48,3 +48,11 @@ class ParticleSwarmOptimization:
                     i + 1, self.__max_iter, self.__gbest_score))
         print('Finish with gbest score {:.18f}'.format(self.__gbest_score))
         return history
+
+    @property
+    def gbest_centroids(self):
+        return self.__gbest_centroids
+
+    @gbest_centroids.setter
+    def gbest_centroids(self, gbest_centroids):
+        self.__gbest_centroids = gbest_centroids
