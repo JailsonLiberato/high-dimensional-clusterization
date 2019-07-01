@@ -1,23 +1,27 @@
-import numpy
+import numpy as np
 
 
 class Utils:
 
+    def __init__(self):
+        pass
+
     @staticmethod
-    def calc_sse(centroids: numpy.ndarray, labels: numpy.ndarray, data: numpy.ndarray):
+    def calc_sse(centroids: np.ndarray, labels: np.ndarray, data: np.ndarray):
         distances = 0
         for i, c in enumerate(centroids):
-            idx = numpy.where(labels == i)
-            dist = numpy.sum((data[idx] - c) ** 2)
+            idx = np.where(labels == i)
+            dist = np.sum((data[idx] - c) ** 2)
             distances += dist
         return distances
 
-
-
     @staticmethod
-    def normalize(x: numpy.ndarray):
-        return (x - x.min(axis=0)) / (x.max(axis=0) - x.min(axis=0))
-
-    @staticmethod
-    def standardize(x: numpy.ndarray):
-        return (x - x.mean(axis=0)) / numpy.std(x, axis=0)
+    def quantization_error(centroids: np.ndarray, labels: np.ndarray, data: np.ndarray) -> float:
+        error = 0.0
+        for i, c in enumerate(centroids):
+            idx = np.where(labels == i)
+            dist = np.linalg.norm(data[idx] - c)
+            dist /= len(idx)
+            error += dist
+        error /= len(centroids)
+        return error
