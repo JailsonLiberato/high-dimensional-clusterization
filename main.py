@@ -2,6 +2,7 @@ from sklearn import datasets
 from sklearn.metrics import silhouette_score
 from utils import Utils
 from kmeans import Kmeans
+from pso import ParticleSwarmOptimization
 import random
 
 
@@ -24,7 +25,9 @@ class Main:
         self.__print_metrics("K-means++", kmeans, predicted_kmeans)
 
     def execute_pso_kmeans(self):
-        pass
+        pso = ParticleSwarmOptimization(
+            n_cluster=3, n_particles=10, data=self.__X, hybrid=True, max_iter=2000, print_debug=50)
+        hist = pso.run()
 
     def execute_pca_pso_kmeans(self):
         pass
