@@ -166,48 +166,36 @@ class Main:
         print(self.pso_plain['sse'])
 
         benchmark = {
-            'method': ['K-Means++', 'PSO', 'PSO Hybrid', 't-SNE Kmeans','t-SNE PSO Kmeans'],
+            'method': ['K-Means++', 'PSO', 'PSO Hybrid'],
             'sse_mean': [
                 np.around(np.mean(self.kmeans_app['sse']), decimals=10),
                 np.around(np.mean(self.pso_plain['sse']), decimals=10),
                 np.around(np.mean(self.pso_hybrid['sse']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['sse']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['sse']), decimals=10)
             ],
             'sse_stdev': [
                 np.around(np.std(self.kmeans_app['sse']), decimals=10),
                 np.around(np.std(self.pso_plain['sse']), decimals=10),
                 np.around(np.std(self.pso_hybrid['sse']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['sse']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['sse']), decimals=10)
             ],
             'silhouette_mean': [
                 np.around(np.mean(self.kmeans_app['silhouette']), decimals=10),
                 np.around(np.mean(self.pso_plain['silhouette']), decimals=10),
                 np.around(np.mean(self.pso_hybrid['silhouette']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['silhouette']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['silhouette']), decimals=10)
             ],
             'silhouette_stdev': [
                 np.around(np.std(self.kmeans_app['silhouette']), decimals=10),
                 np.around(np.std(self.pso_plain['silhouette']), decimals=10),
                 np.around(np.std(self.pso_hybrid['silhouette']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['silhouette']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['silhouette']), decimals=10)
             ],
             'quantization_mean': [
                 np.around(np.mean(self.kmeans_app['quantization']), decimals=10),
                 np.around(np.mean(self.pso_plain['quantization']), decimals=10),
                 np.around(np.mean(self.pso_hybrid['quantization']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['quantization']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['quantization']), decimals=10)
             ],
             'quantization_stdev': [
                 np.around(np.std(self.kmeans_app['quantization']), decimals=10),
                 np.around(np.std(self.pso_plain['quantization']), decimals=10),
                 np.around(np.std(self.pso_hybrid['quantization']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['quantization']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['quantization']), decimals=10)
             ],
         }
         benchmark_dataframe = pd.DataFrame.from_dict(benchmark)
@@ -219,9 +207,6 @@ main = Main(dataset, n_dim=13)
 main.execute_kmeans()
 main.execute_pso_kmeans()
 main.execute_pso_hybrid()
-main.execute_pca_pso_kmeans()
-main.execute_tsne_kmeans()
-main.execute_tsne_pso_kmeans()
 main.execute_comparison("arquivo")
 
 main2 = Main(dataset, n_dim=13)
