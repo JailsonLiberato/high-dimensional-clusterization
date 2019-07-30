@@ -1,10 +1,15 @@
 <component name="ProjectDictionaryState">
   <dictionary name="jaba_">
     <words>
+      <w>adjustament</w>
+      <w>boxplot</w>
+      <w>calinski</w>
       <w>dataset</w>
+      <w>gbest</w>
       <w>harabasz</w>
       <w>initializate</w>
       <w>kmeans</w>
+      <w>pbar</w>
       <w>pbest</w>
       <w>tsne</w>
     </words>
