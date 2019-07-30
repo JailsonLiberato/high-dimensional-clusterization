@@ -79,7 +79,7 @@ class Main:
         self.__print_metrics("PCA + K-means", pca_kmeans_results)
         self.__print_metrics("t-SNE + K-means", tsne_kmeans_results)
         self.__print_metrics("PSO K-means", pso_kmeans_results)
-        self.__generate_boxplot(kmeans_results, pca_kmeans_results, tsne_kmeans_results)
+        self.__generate_boxplot(kmeans_results, pca_kmeans_results, tsne_kmeans_results, pso_kmeans_results)
         print(82 * '_')
 
     def __print_metrics(self, title, kmeans_array):
@@ -101,42 +101,45 @@ class Main:
 
     def __generate_boxplot(self, kmeans_results, pca_kmeans_results, tsne_kmeans_results, pso_kmeans_results):
         data_silhouette = [self.__execute_silhouette(kmeans_results), self.__execute_silhouette(pca_kmeans_results),
-                self.__execute_silhouette(tsne_kmeans_results)]
+                           self.__execute_silhouette(tsne_kmeans_results), self.__execute_silhouette(pso_kmeans_results)]
         fig, ax = plt.subplots()
         ax.set_title('Boxplot Silhouette')
         ax.boxplot(data_silhouette)
-        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.xticks([1, 2, 3, 4], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans', 'PSO K-means'])
         plt.savefig('boxplot_silhouette.png')
 
         plt.close(fig)
 
         data_v_measure_score = [self.__execute_v_measure_score(kmeans_results),
                                 self.__execute_v_measure_score(pca_kmeans_results),
-                                self.__execute_v_measure_score(tsne_kmeans_results)]
+                                self.__execute_v_measure_score(tsne_kmeans_results),
+                                self.__execute_v_measure_score(pso_kmeans_results)]
         fig, ax = plt.subplots()
         ax.set_title('Boxplot V Measure Score')
         ax.boxplot(data_v_measure_score)
-        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.xticks([1, 2, 3, 4], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans', 'PSO K-means'])
         plt.savefig('boxplot_v_measure_score.png')
         plt.close(fig)
 
         data_adjusted_rand_score = [self.__execute_adjusted_rand_score(kmeans_results),
                                     self.__execute_adjusted_rand_score(pca_kmeans_results),
-                                    self.__execute_adjusted_rand_score(tsne_kmeans_results)]
+                                    self.__execute_adjusted_rand_score(tsne_kmeans_results),
+                                    self.__execute_adjusted_rand_score(pso_kmeans_results)]
         fig, ax = plt.subplots()
         ax.set_title('Boxplot Adjusted Rand_Score')
         ax.boxplot(data_adjusted_rand_score)
-        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.xticks([1, 2, 3, 4], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans', 'PSO K-means'])
         plt.savefig('boxplot_adjusted_rand_score.png')
         plt.close(fig)
 
         data_calinski_harabasz_score = [self.__execute_calinski_harabasz_score(kmeans_results),
-                                    self.__execute_calinski_harabasz_score(pca_kmeans_results),
-                                    self.__execute_calinski_harabasz_score(tsne_kmeans_results)]
+                                        self.__execute_calinski_harabasz_score(pca_kmeans_results),
+                                        self.__execute_calinski_harabasz_score(tsne_kmeans_results),
+                                        self.__execute_calinski_harabasz_score(pso_kmeans_results)]
         fig, ax = plt.subplots()
         ax.set_title('Boxplot Data Calinski Harabasz_Score')
         ax.boxplot(data_calinski_harabasz_score)
-        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.xticks([1, 2, 3, 4], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans', 'PSO K-means'])
         plt.savefig('boxplot_calinski_harabasz_score.png')
         plt.close(fig)
 

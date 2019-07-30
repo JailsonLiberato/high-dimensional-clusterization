@@ -32,18 +32,18 @@ class ParticleSwarmOptimization:
             print("PSO[", count_iterations, "]: gBest -> ", self.__fitness_function.run(self.__gbest, self.__data))
 
     def __calculate_fitness(self, particle):
-        if not np.array_equal(particle.position, particle.pbest) and self.__fitness_function.run(particle.position, self.__data) > \
-                self.__fitness_function.run(particle.pbest, self.__data):
-            particle.pbest = copy(particle.position)
-            particle.fitness = self.__fitness_function.run(particle.pbest, self.__data)
+        if not np.array_equal(particle.position, particle.pbest):
+            if self.__fitness_function.run(particle.position, self.__data) > \
+                    self.__fitness_function.run(particle.pbest, self.__data):
+                particle.pbest = copy(particle.position)
+                particle.fitness = self.__fitness_function.run(particle.pbest, self.__data)
 
     def __update_gbest(self, particle):
-        if not np.array_equal(self.__gbest, particle.pbest) and (self.__fitness_function.run(particle.pbest,
-                                                                                             self.__data) >
-                                                                 self.__fitness_function.run(self.__gbest,
-                                                                                             self.__data)) and \
-                self.__is_limit_exceeded(particle.pbest):
-            self.__gbest = copy(particle.pbest)
+        if not np.array_equal(self.__gbest, particle.pbest):
+            if (self.__fitness_function.run(particle.pbest, self.__data) > self.__fitness_function.run(self.__gbest,
+                                                                                                       self.__data)) \
+                    and self.__is_limit_exceeded(particle.pbest):
+                self.__gbest = copy(particle.pbest)
 
     def __is_limit_exceeded(self, pbest):
         return np.any(pbest >= self.__min_bounds) and np.any(pbest <= self.__max_bounds)
