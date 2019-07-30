@@ -1,5 +1,5 @@
 import numpy as np
-from particle import Particle
+from deprecated.particle_old import Particle
 
 
 class ParticleSwarmOptimization:

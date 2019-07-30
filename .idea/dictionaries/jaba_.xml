@@ -2,8 +2,11 @@
   <dictionary name="jaba_">
     <words>
       <w>dataset</w>
+      <w>harabasz</w>
       <w>initializate</w>
       <w>kmeans</w>
+      <w>pbest</w>
+      <w>tsne</w>
     </words>
   </dictionary>
 </component>

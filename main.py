@@ -1,216 +1,156 @@
-from sklearn import datasets
-from sklearn.metrics import silhouette_score
-from utils import Utils
-from kmeans import Kmeans
-from pso import ParticleSwarmOptimization
-import random
-import numpy as np
-import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.datasets import load_digits
+from sklearn.preprocessing import scale
+from sklearn import metrics
+from sklearn.metrics.cluster import v_measure_score
+from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Main:
 
-    kmeans_app = {
-        'silhouette': [],
-        'sse': [],
-        'quantization': []
-    }
+    N_ITERATIONS: int = 5
 
-    pso_plain = {
-        'silhouette': [],
-        'sse': [],
-        'quantization': []
-    }
+    def __init__(self):
+        self.__load_database()
+        self.__sample_size = 300
 
-    pso_hybrid = {
-        'silhouette': [],
-        'sse': [],
-        'quantization': []
-    }
+    def __load_database(self):
+        """Load the database"""
+        digits = load_digits()
+        self.__data = scale(digits.data)
+        n_samples, self.__n_features = self.__data.shape
+        self.__n_digits = len(np.unique(digits.target))
+        self.__labels = digits.target
+        print("n_digits: %d, \t n_samples %d, \t n_features %d"
+              % (self.__n_digits, n_samples, self.__n_features))
 
-    tsne_kmeans = {
-        'silhouette': [],
-        'sse': [],
-        'quantization': []
-    }
+    def execute(self):
+        """Execute all algorithms"""
+        kmeans_results = []
+        pca_kmeans_results = []
+        tsne_kmeans_results = []
+        for i in range(self.N_ITERATIONS):
+            print("Iteration ", i + 1)
+            kmeans_results.append(self.__execute_kmeans())
+            pca_kmeans_results.append(self.__execute_pca_kmeans())
+            tsne_kmeans_results.append(self.__execute_tsne_kmeans())
+        self.__compare_results(kmeans_results, pca_kmeans_results, tsne_kmeans_results)
+        self.__generate_boxplot(kmeans_results, pca_kmeans_results, tsne_kmeans_results)
 
-    tsne_pso_kmeans = {
-        'silhouette': [],
-        'sse': [],
-        'quantization': []
-    }
+    def __execute_kmeans(self):
+        kmeans = KMeans(n_clusters=self.__n_digits)
+        kmeans.fit(self.__data)
+        return kmeans
 
-    def __init__(self, dataset, n_dim):
-        self.__dataset = dataset
-        self.__n_dim = n_dim
-        self.__x, self.__y = self.__initializate_data_sim()
+    def __execute_pca_kmeans(self):
+        pca = PCA(n_components=self.__n_digits).fit(self.__data)
+        kmeans = KMeans(init=pca.components_, n_clusters=self.__n_digits, n_init=1)
+        kmeans.fit(self.__data)
 
-    def __initializate_data_sim(self):
-        columns = random.sample(range(self.__dataset.data.shape[1]), self.__n_dim)
-        x = dataset.data[:, columns]
-        y = dataset.target
-        return x, y
+        return kmeans
 
-    def execute_kmeans(self):
-        print("Executing K-means...")
-        for _ in range(20):
-            kmeans = Kmeans(n_cluster=3, init_pp=True)
-            kmeans.fit(self.__x)
-            predicted_kmeans = kmeans.predict(self.__x)
-            self.__organize_metrics(self.kmeans_app, kmeans, predicted_kmeans)
+    def __execute_tsne_kmeans(self):
+        tsne = TSNE(n_components=2).fit_transform(self.__data)
+        kmeans_tsne = KMeans(n_clusters=10, random_state=0)
+        kmeans_tsne.fit_predict(tsne)
+        return kmeans_tsne
 
-    def execute_pso_kmeans(self):
-        print("Executing PSO-Kmeans")
-        for _ in range(20):
-            pso = ParticleSwarmOptimization(
-                n_cluster=3, n_particles=10, data=self.__x, hybrid=False, max_iter=2000, print_debug=2000)
-            pso.run()
-            pso_kmeans = Kmeans(n_cluster=3, init_pp=False)
-            pso_kmeans.centroid = pso.gbest_centroids.copy()
-            pso_kmeans.fit(self.__x)
-            predicted_pso = pso_kmeans.predict(self.__x)
-            self.__organize_metrics(self.pso_plain, pso_kmeans, predicted_pso)
+    def __compare_results(self, kmeans_results, pca_kmeans_results, tsne_kmeans_results):
+        print(82 * '_')
+        self.__print_metrics("K-means", kmeans_results)
+        self.__print_metrics("PCA + K-means", pca_kmeans_results)
+        self.__print_metrics("t-SNE + K-means", tsne_kmeans_results)
+        self.__generate_boxplot(kmeans_results, pca_kmeans_results, tsne_kmeans_results)
+        print(82 * '_')
 
-    def execute_pso_hybrid(self):
-        print("Executing PSO-Hybrid")
-        for _ in range(20):
-            pso = ParticleSwarmOptimization(
-                n_cluster=3, n_particles=10, data=self.__x, hybrid=True, max_iter=2000, print_debug=2000)
-            pso.run()
-            pso_kmeans = Kmeans(n_cluster=3, init_pp=False)
-            pso_kmeans.centroid = pso.gbest_centroids.copy()
-            pso_kmeans.fit(self.__x)
-            predicted_pso = pso_kmeans.predict(self.__x)
-            self.__organize_metrics(self.pso_hybrid, pso_kmeans, predicted_pso)
+    def __print_metrics(self, title, kmeans_array):
+        silhouette_total = np.sum(self.__execute_silhouette(kmeans_array))
+        v_measure_score_total = np.sum(self.__execute_v_measure_score(kmeans_array))
+        adjusted_rand_score_total = np.sum(self.__execute_adjusted_rand_score(kmeans_array))
+        calinski_harabasz_score_total = np.sum(self.__execute_calinski_harabasz_score(kmeans_array))
 
+        silhouette_mean = silhouette_total / self.N_ITERATIONS
+        v_measure_score_mean = v_measure_score_total / self.N_ITERATIONS
+        adjusted_rand_score_mean = adjusted_rand_score_total / self.N_ITERATIONS
+        calinski_harabasz_score_mean = calinski_harabasz_score_total / self.N_ITERATIONS
 
+        print('\t\tsilhouette\tv_measure_score\tadjusted_rand_score\tcalinski_harabasz_score')
+        print(title, '\t%.3f' % silhouette_mean, '\t%.3f' %
+              v_measure_score_mean, '\t\t\t%.3f' %
+              adjusted_rand_score_mean, '\t\t\t%.3f' %
+              calinski_harabasz_score_mean)
 
-    def execute_pca_pso_kmeans(self):
-        pass
+    def __generate_boxplot(self, kmeans_results, pca_kmeans_results, tsne_kmeans_results):
+        data_silhouette = [self.__execute_silhouette(kmeans_results), self.__execute_silhouette(pca_kmeans_results),
+                self.__execute_silhouette(tsne_kmeans_results)]
+        fig, ax = plt.subplots()
+        ax.set_title('Boxplot Silhouette')
+        ax.boxplot(data_silhouette)
+        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.savefig('boxplot_silhouette.png')
 
-    def execute_tsne_kmeans(self):
-        print("Executing t-SNE Kmeans")
-        self.__x, self.__y = self.__initializate_data_sim()
-        self.__x = TSNE(n_components=2).fit_transform(self.__x)
-        for _ in range(20):
-            kmeans = Kmeans(n_cluster=3, init_pp=True)
-            kmeans.fit(self.__x)
-            predicted_kmeans = kmeans.predict(self.__x)
-            self.__organize_metrics(self.tsne_kmeans, kmeans, predicted_kmeans)
-
-    def execute_tsne_pso_kmeans(self):
-        print("Executing t-SNE PSO Kmeans")
-        self.__x, self.__y = self.__initializate_data_sim()
-        self.__x = TSNE(n_components=2).fit_transform(self.__x)
-        for _ in range(20):
-            pso = ParticleSwarmOptimization(
-                n_cluster=3, n_particles=10, data=self.__x, hybrid=False, max_iter=2000, print_debug=2000)
-            pso.run()
-            pso_kmeans = Kmeans(n_cluster=3, init_pp=False)
-            pso_kmeans.centroid = pso.gbest_centroids.copy()
-            pso_kmeans.fit(self.__x)
-            predicted_pso = pso_kmeans.predict(self.__x)
-            self.__organize_metrics(self.tsne_pso_kmeans, pso_kmeans, predicted_pso)
-
-    def __organize_metrics(self, dictionary_data, kmeans: Kmeans, predicted_kmeans):
-        silhouette = silhouette_score(self.__x, predicted_kmeans)
-        sse = kmeans.sse
-        quantization = Utils.quantization_error(centroids=kmeans.centroid, data=self.__x, labels=predicted_kmeans)
-        dictionary_data['silhouette'].append(silhouette)
-        dictionary_data['sse'].append(sse)
-        dictionary_data['quantization'].append(quantization)
-        print(dictionary_data)
-
-    def execute_comparison2(self, filename):
-        benchmark = {
-            'method': ['K-means', 't-SNE Kmeans', 't-SNE PSO Kmeans'],
-            'sse_mean': [
-                np.around(np.mean(self.kmeans_app['sse']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['sse']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['sse']), decimals=10)
-            ],
-            'sse_stdev': [
-                np.around(np.std(self.kmeans_app['sse']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['sse']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['sse']), decimals=10)
-            ],
-            'silhouette_mean': [
-                np.around(np.mean(self.kmeans_app['silhouette']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['silhouette']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['silhouette']), decimals=10)
-            ],
-            'silhouette_stdev': [
-                np.around(np.std(self.kmeans_app['silhouette']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['silhouette']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['silhouette']), decimals=10)
-            ],
-            'quantization_mean': [
-                np.around(np.mean(self.kmeans_app['quantization']), decimals=10),
-                np.around(np.mean(self.tsne_kmeans['quantization']), decimals=10),
-                np.around(np.mean(self.tsne_pso_kmeans['quantization']), decimals=10)
-            ],
-            'quantization_stdev': [
-                np.around(np.std(self.kmeans_app['quantization']), decimals=10),
-                np.around(np.std(self.tsne_kmeans['quantization']), decimals=10),
-                np.around(np.std(self.tsne_pso_kmeans['quantization']), decimals=10)
-            ],
-        }
-
-        benchmark_dataframe = pd.DataFrame.from_dict(benchmark)
-        benchmark_dataframe.to_csv(filename + '.csv', index=False)
-
-    def execute_comparison(self, filename):
-        print("Executing comparison...\n")
-        print(self.kmeans_app['sse'])
-        print(self.pso_plain['sse'])
-
-        benchmark = {
-            'method': ['K-Means++', 'PSO', 'PSO Hybrid'],
-            'sse_mean': [
-                np.around(np.mean(self.kmeans_app['sse']), decimals=10),
-                np.around(np.mean(self.pso_plain['sse']), decimals=10),
-                np.around(np.mean(self.pso_hybrid['sse']), decimals=10),
-            ],
-            'sse_stdev': [
-                np.around(np.std(self.kmeans_app['sse']), decimals=10),
-                np.around(np.std(self.pso_plain['sse']), decimals=10),
-                np.around(np.std(self.pso_hybrid['sse']), decimals=10),
-            ],
-            'silhouette_mean': [
-                np.around(np.mean(self.kmeans_app['silhouette']), decimals=10),
-                np.around(np.mean(self.pso_plain['silhouette']), decimals=10),
-                np.around(np.mean(self.pso_hybrid['silhouette']), decimals=10),
-            ],
-            'silhouette_stdev': [
-                np.around(np.std(self.kmeans_app['silhouette']), decimals=10),
-                np.around(np.std(self.pso_plain['silhouette']), decimals=10),
-                np.around(np.std(self.pso_hybrid['silhouette']), decimals=10),
-            ],
-            'quantization_mean': [
-                np.around(np.mean(self.kmeans_app['quantization']), decimals=10),
-                np.around(np.mean(self.pso_plain['quantization']), decimals=10),
-                np.around(np.mean(self.pso_hybrid['quantization']), decimals=10),
-            ],
-            'quantization_stdev': [
-                np.around(np.std(self.kmeans_app['quantization']), decimals=10),
-                np.around(np.std(self.pso_plain['quantization']), decimals=10),
-                np.around(np.std(self.pso_hybrid['quantization']), decimals=10),
-            ],
-        }
-        benchmark_dataframe = pd.DataFrame.from_dict(benchmark)
-        benchmark_dataframe.to_csv(filename + '.csv', index=False)
+        plt.close(fig)
 
 
-dataset = datasets.load_wine()
-main = Main(dataset, n_dim=13)
-main.execute_kmeans()
-main.execute_pso_kmeans()
-main.execute_pso_hybrid()
-main.execute_comparison("arquivo")
+        data_v_measure_score = [self.__execute_v_measure_score(kmeans_results),
+                                self.__execute_v_measure_score(pca_kmeans_results),
+                                self.__execute_v_measure_score(tsne_kmeans_results)]
+        fig, ax = plt.subplots()
+        ax.set_title('Boxplot V Measure Score')
+        ax.boxplot(data_v_measure_score)
+        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.savefig('boxplot_v_measure_score.png')
+        plt.close(fig)
 
-main2 = Main(dataset, n_dim=13)
-main2.execute_kmeans()
-main2.execute_tsne_kmeans()
-main2.execute_tsne_pso_kmeans()
-main2.execute_comparison2("arquivo2")
+        data_adjusted_rand_score = [self.__execute_adjusted_rand_score(kmeans_results),
+                                    self.__execute_adjusted_rand_score(pca_kmeans_results),
+                                    self.__execute_adjusted_rand_score(tsne_kmeans_results)]
+        fig, ax = plt.subplots()
+        ax.set_title('Boxplot Adjusted Rand_Score')
+        ax.boxplot(data_adjusted_rand_score)
+        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.savefig('boxplot_adjusted_rand_score.png')
+        plt.close(fig)
+
+        data_calinski_harabasz_score = [self.__execute_calinski_harabasz_score(kmeans_results),
+                                    self.__execute_calinski_harabasz_score(pca_kmeans_results),
+                                    self.__execute_calinski_harabasz_score(tsne_kmeans_results)]
+        fig, ax = plt.subplots()
+        ax.set_title('Boxplot Data Calinski Harabasz_Score')
+        ax.boxplot(data_calinski_harabasz_score)
+        plt.xticks([1, 2, 3], ['Kmeans', 'PCA Kmeans', 't-SNE Kmeans'])
+        plt.savefig('boxplot_calinski_harabasz_score.png')
+        plt.close(fig)
+
+    def __execute_silhouette(self, kmeans_array):
+        silhouette_array = []
+        for kmeans in kmeans_array:
+            silhouette_array.append(metrics.silhouette_score(self.__data, kmeans.labels_, metric='euclidean',
+                                                             sample_size=self.__sample_size))
+        return  silhouette_array
+
+    def __execute_v_measure_score(self, kmeans_array):
+        v_measure_score_array = []
+        for kmeans in kmeans_array:
+            v_measure_score_array.append(v_measure_score(self.__labels, kmeans.labels_))
+        return v_measure_score_array
+
+    def __execute_adjusted_rand_score(self, kmeans_array):
+        adjusted_rand_score_array = []
+        for kmeans in kmeans_array:
+            adjusted_rand_score_array.append(adjusted_rand_score(self.__labels, kmeans.labels_))
+        return adjusted_rand_score_array
+
+    def __execute_calinski_harabasz_score(self, kmeans_array):
+        calinski_harabasz_score_array = []
+        for kmeans in kmeans_array:
+            calinski_harabasz_score_array.append(metrics.calinski_harabasz_score(self.__data, kmeans.labels_))
+        return calinski_harabasz_score_array
+
+
+main = Main()
+main.execute()

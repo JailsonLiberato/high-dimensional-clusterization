@@ -1,5 +1,5 @@
 import numpy as np
-from utils import Utils
+from deprecated.utils import Utils
 
 
 class Kmeans:

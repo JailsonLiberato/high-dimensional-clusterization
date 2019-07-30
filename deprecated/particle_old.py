@@ -1,6 +1,6 @@
 import numpy as np
-from kmeans import Kmeans
-from utils import Utils
+from deprecated.kmeans import Kmeans
+from deprecated.utils import Utils
 
 
 class Particle:
