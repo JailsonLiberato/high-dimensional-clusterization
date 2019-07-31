@@ -8,7 +8,7 @@ import random
 
 class ParticleSwarmOptimization:
 
-    def __init__(self, n_dimensions, data):
+    def __init__(self, n_dimensions, data, gbest_initial):
         self.__fitness_function = FitnessFunction()
         self.__min_bounds = np.amin(data)
         self.__max_bounds = np.amax(data)
@@ -16,8 +16,11 @@ class ParticleSwarmOptimization:
         self.__particles = particle_service.initialize_particles(self.__min_bounds, self.__max_bounds,
                                                                   n_dimensions, self.__fitness_function, data)
         self.__gbest = copy(self.__particles[0].pbest)
+        if gbest_initial is not None:
+            self.__gbest = copy(gbest_initial)
         self.__data = data
-        self.__gbest_fitness = self.__fitness_function.run(position=self.__gbest, data=self.__data )
+        self.__gbest_fitness = self.__fitness_function.run(position=self.__gbest, data=self.__data)
+        self.__gbest_fitness_array = []
 
     def optimize(self):
         count_iterations: int = 0
@@ -30,17 +33,20 @@ class ParticleSwarmOptimization:
                 self.__update_position(particle)
                 self.__update_bound_adjustament(particle)
             count_iterations += 1
+            self.__gbest_fitness_array.append(self.__gbest_fitness)
             print("PSO[", count_iterations, "]: gBest -> ", self.__gbest_fitness)
 
     def __calculate_fitness(self, particle):
-        if particle.fitness > particle.pbest_fitness:
-            particle.pbest = copy(particle.position)
-            particle.pbest_fitness = self.__fitness_function.run(particle.pbest, self.__data)
+        if not np.array_equal(particle.position, particle.pbest):
+            if particle.fitness > particle.pbest_fitness:
+                particle.pbest = copy(particle.position)
+                particle.pbest_fitness = self.__fitness_function.run(particle.pbest, self.__data)
 
     def __update_gbest(self, particle):
-        if (particle.pbest_fitness > self.__gbest_fitness) and self.__is_limit_exceeded(particle.pbest):
-            self.__gbest = copy(particle.pbest)
-            self.__gbest_fitness = copy(particle.pbest_fitness)
+        if not np.array_equal(particle.pbest, self.__gbest):
+            if (particle.pbest_fitness > self.__gbest_fitness) and self.__is_limit_exceeded(particle.pbest):
+                self.__gbest = copy(particle.pbest)
+                self.__gbest_fitness = copy(particle.pbest_fitness)
 
     def __is_limit_exceeded(self, pbest):
         return np.any(pbest >= self.__min_bounds) and np.any(pbest <= self.__max_bounds)
@@ -70,3 +76,7 @@ class ParticleSwarmOptimization:
     @property
     def gbest(self):
         return self.__gbest
+
+    @property
+    def gbest_fitness_array(self):
+        return self.__gbest_fitness_array
