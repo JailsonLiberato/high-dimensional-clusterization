@@ -4,8 +4,9 @@ from copy import copy
 
 class Particle:
 
-    def __init__(self, id, position, fitness, n_dimensions):
+    def __init__(self, id, position, fitness, pbest_fitness, n_dimensions):
         self.__fitness = fitness
+        self.__pbest_fitness = pbest_fitness
         self.__id = id
         self.__position = position
         self.__pbest = copy(position)
@@ -46,3 +47,11 @@ class Particle:
     @fitness.setter
     def fitness(self, fitness):
         self.__fitness = fitness
+
+    @property
+    def pbest_fitness(self):
+        return self.__pbest_fitness
+
+    @pbest_fitness.setter
+    def pbest_fitness(self, pbest_fitness):
+        self.__pbest_fitness = pbest_fitness

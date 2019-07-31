@@ -1,6 +1,7 @@
 from model.particle import Particle
 import numpy as np
 from util.constants import Constants
+from copy import copy
 
 
 class ParticleService:
@@ -9,7 +10,8 @@ class ParticleService:
         particles = []
         for i in range(Constants.N_PARTICLES):
             position = self.__generate_initial_position(min_bound, max_bound, n_dimensions)
-            particle = Particle(i + 1, position, fitness_function.run(position, data), n_dimensions)
+            fitness = fitness_function.run(position, data)
+            particle = Particle(i + 1, position, fitness, 0, n_dimensions)
             particles.append(particle)
         return particles
 

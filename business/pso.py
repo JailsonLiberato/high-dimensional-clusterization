@@ -17,6 +17,7 @@ class ParticleSwarmOptimization:
                                                                   n_dimensions, self.__fitness_function, data)
         self.__gbest = copy(self.__particles[0].pbest)
         self.__data = data
+        self.__gbest_fitness = self.__fitness_function.run(position=self.__gbest, data=self.__data )
 
     def optimize(self):
         count_iterations: int = 0
@@ -29,34 +30,31 @@ class ParticleSwarmOptimization:
                 self.__update_position(particle)
                 self.__update_bound_adjustament(particle)
             count_iterations += 1
-            print("PSO[", count_iterations, "]: gBest -> ", self.__fitness_function.run(self.__gbest, self.__data))
+            print("PSO[", count_iterations, "]: gBest -> ", self.__gbest_fitness)
 
     def __calculate_fitness(self, particle):
-        if not np.array_equal(particle.position, particle.pbest):
-            if self.__fitness_function.run(particle.position, self.__data) > \
-                    self.__fitness_function.run(particle.pbest, self.__data):
-                particle.pbest = copy(particle.position)
-                particle.fitness = self.__fitness_function.run(particle.pbest, self.__data)
+        if particle.fitness > particle.pbest_fitness:
+            particle.pbest = copy(particle.position)
+            particle.pbest_fitness = self.__fitness_function.run(particle.pbest, self.__data)
 
     def __update_gbest(self, particle):
-        if not np.array_equal(self.__gbest, particle.pbest):
-            if (self.__fitness_function.run(particle.pbest, self.__data) > self.__fitness_function.run(self.__gbest,
-                                                                                                       self.__data)) \
-                    and self.__is_limit_exceeded(particle.pbest):
-                self.__gbest = copy(particle.pbest)
+        if (particle.pbest_fitness > self.__gbest_fitness) and self.__is_limit_exceeded(particle.pbest):
+            self.__gbest = copy(particle.pbest)
+            self.__gbest_fitness = copy(particle.pbest_fitness)
 
     def __is_limit_exceeded(self, pbest):
         return np.any(pbest >= self.__min_bounds) and np.any(pbest <= self.__max_bounds)
 
     def __calculate_velocity(self, inertia: float, particle):
-            r1 = random.uniform(0, 1)
-            r2 = random.uniform(0, 1)
-            particle.velocity = (inertia * particle.velocity) + Constants.COEFFICIENT1 * r1 * \
-                                (particle.pbest - particle.position) + Constants.COEFFICIENT2 * r2 \
-                                * (self.__gbest - particle.position)
+        r1 = random.uniform(0, 1)
+        r2 = random.uniform(0, 1)
+        particle.velocity = (inertia * particle.velocity) + Constants.COEFFICIENT1 * r1 * \
+                            (particle.pbest - particle.position) + Constants.COEFFICIENT2 * r2 \
+                            * (self.__gbest - particle.position)
 
     def __update_position(self, particle):
         particle.position += particle.velocity
+        particle.fitness = self.__fitness_function.run(particle.position, self.__data)
 
     def __update_bound_adjustament(self, particle):
         min_array = [self.__min_bounds]
