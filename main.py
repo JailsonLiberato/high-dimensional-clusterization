@@ -7,8 +7,6 @@ from util.plot_util import PlotUtil
 from business.metrics_functions import MetricsFunctions
 from util.file_util import FileUtil
 import pandas as pd
-import matplotlib.pyplot as plt
-import table as table
 
 
 class Main:
@@ -78,6 +76,7 @@ class Main:
 
         df = pd.DataFrame(data=data_function, columns=MetricsFunctions.ALL_METRICS, index=self.__filename_array)
         PlotUtil.generate_table_by_dataframe(df)
+
 
 main = Main()
 main.execute()
