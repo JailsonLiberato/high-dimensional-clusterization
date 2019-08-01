@@ -4,7 +4,7 @@ class Constants:
     # General #
 
     """Number of iterations"""
-    N_ITERATIONS: int = 50
+    N_ITERATIONS: int = 20
 
     """Number of dimensions"""
     N_DIMENSIONS: int = 64
@@ -18,7 +18,7 @@ class Constants:
     N_PARTICLES: int = 30
 
     """Number maximum iterations"""
-    N_MAX_ITERATIONS: int = 5
+    N_MAX_ITERATIONS: int = 100
 
     """Inertia maximum"""
     INERTIA_MAX: float = 0.9

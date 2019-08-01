@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from util.file_util import FileUtil
 from business.metrics_functions import MetricsFunctions
 from util.constants import Constants
+import numpy as np
+from pandas.plotting import table
 
 
 class PlotUtil:
@@ -16,11 +18,39 @@ class PlotUtil:
         plt.close(fig)
 
     @staticmethod
-    def generate_boxplot_by_file(filename_array):
+    def generate_table_by_dataframe(df):
+        fig, ax = plt.subplots(figsize=(12, 3))
+        ax.set_title("Mean Metrics Functions")
+        ax.xaxis.set_visible(False)
+        ax.yaxis.set_visible(False)
+        ax.set_frame_on(False)
+        tab = table(ax, df, loc='upper right')
+        tab.auto_set_font_size(False)
+        tab.set_fontsize(8)
+        plt.savefig("plots/mean_metrics_functions.png")
+        plt.close(fig)
+
+    @staticmethod
+    def get_values_to_print_mean_metrics(filename_array):
+        file_array_read = PlotUtil.get_values_organized_by_metric(filename_array)
+        array_mean = []
+        for metric in MetricsFunctions.ALL_METRICS:
+            array_by_metric = PlotUtil.organize_data_by_metric(file_array_read, metric)
+            for value_metric in array_by_metric:
+                array_mean.append(np.sum(value_metric)/Constants.N_ITERATIONS)
+        return array_mean
+
+    @staticmethod
+    def get_values_organized_by_metric(filename_array):
         file_array_read = []
         for filename in filename_array:
             file_array_read.append(FileUtil.read_file(filename=filename))
-        PlotUtil.generate_boxplot(file_array_read, filename_array)
+        return file_array_read
+
+    @staticmethod
+    def generate_boxplot_by_file(filename_array):
+        file_array_read = PlotUtil.get_values_organized_by_metric(filename_array)
+        PlotUtil.generate_boxplot(data=file_array_read, filename_array=filename_array)
 
     @staticmethod
     def generate_boxplot(data, filename_array):
@@ -52,3 +82,4 @@ class PlotUtil:
                         array_function.append(float(value))
             organized_array_boxplot.append(array_function)
         return organized_array_boxplot
+
